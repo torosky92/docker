@@ -1,0 +1,52 @@
+version: '3.5'
+services:
+    postgres_test:
+        image: 'postgres'
+        restart: always
+        volumes:
+            - '.postgres:/var/lib/postgresql/data'
+        env_file: .env
+        ports:
+            - 5432:5432
+        networks:
+            network:
+                aliases:
+                    - postgres_test
+
+    pgadmin_test:
+        image: dpage/pgadmin4
+        env_file: .env
+        restart: always
+        ports:
+            - 81:80
+        depends_on: 
+            - postgres_test 
+        networks:
+            network:
+                aliases:
+                    - pgadmin_test
+
+    backend_test:
+        image: flask:0.0.1
+        container_name: backend_test
+        build: 
+            context: ./
+            dockerfile: backend/Dockerfile
+        expose:
+            - 5000
+        ports:
+            - 5000:5000
+        env_file: .env
+        command: flask run --host=0.0.0.0
+        restart: always
+        volumes:
+            - ../backend:/server/backend
+        depends_on:
+            - postgres_test
+        networks:
+            network:
+                aliases:
+                    - backend_test
+
+networks:
+    network:
